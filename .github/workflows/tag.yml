@@ -46,7 +46,7 @@ jobs:
         dry_run: true  # Perform dryrun first to calculate new version
     - name: Get version file name set variables
       run: |
-        pkg_name=$(grep -P 'version = \{attr = .*\}' pyproject.toml | grep -oP '\w+.__version__')
+        pkg_name=$(grep -P 'version\h*=\h*\{\h*attr\h*=\h*\H*\h*\}' pyproject.toml | grep -oP '\w+.__version__')
         init_file="./src/${pkg_name//.__version__}/__init__.py"
         echo "VERSION_FILE=$init_file" >> "$GITHUB_ENV"
         echo "VERSION=${{ steps.tag_version.outputs.new_version }}" >> "$GITHUB_ENV"
