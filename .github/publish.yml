@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version for build"
+        required: false
+        type: string
+        default: "3.13"
+      tag-name:
+        description: "Git tag to release"
+        required: true
+        type: string
+    secrets:
+      repo-token:
+        description: "GitHub token for release creation"
+        required: true
+      pypi-token:
+        description: "PyPI API token"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv build
+      - run: ls -la dist/
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag-name }}
+          name: Release ${{ inputs.tag-name }}
+          generate_release_notes: true
+          files: |
+            dist/*.tar.gz
+            dist/*.whl
+        env:
+          GITHUB_TOKEN: ${{ secrets.repo-token }}
+      - run: uv publish --token ${{ secrets.pypi-token }}
