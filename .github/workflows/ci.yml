@@ -15,11 +15,6 @@ on:
         description: "The Python package name to test/cover"
         required: true
         type: string
-      skip_commit_prefix:
-        description: Commit prefix to skip CI
-        required: false
-        type: string
-        default: "bump:"
     secrets:
       repo-token:
         description: GitHub token for checkout/PR operations
