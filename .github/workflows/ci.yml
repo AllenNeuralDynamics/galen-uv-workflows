@@ -11,6 +11,10 @@ on:
         description: Python version
         required: true
         type: string
+      package-name:
+        description: "The Python package name to test/cover"
+        required: true
+        type: string
       skip_commit_prefix:
         description: Commit prefix to skip CI
         required: false
@@ -25,20 +29,12 @@ permissions:
   contents: read
   pull-requests: read
 
-concurrency:
-  group: ci-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
 
 jobs:
   tests:
     name: Python ${{ inputs.python-version }} on ${{ inputs.os }}
     runs-on: ${{ inputs.os }}
-    if: >
-      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
-      github.actor != 'github-actions[bot]' &&
-      !(github.event_name == 'push' && startsWith(github.event.head_commit.message, inputs.skip_commit_prefix))
 
-    # ← NO strategy.matrix here!
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -54,7 +50,7 @@ jobs:
           uv run --frozen ruff check --output-format=github .
       - run: uv run --frozen interrogate -v
       - run: uv run --frozen codespell --check-filenames
-      - run: uv run --frozen pytest --cov aind-mri-utils
+      - run: uv run --frozen pytest --cov ${{ inputs.package-name }}
       - run: uv build
       - run: |
           TEMP_DIR=${{ runner.temp }}/wheeltest
