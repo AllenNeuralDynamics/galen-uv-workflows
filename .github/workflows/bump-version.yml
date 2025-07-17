@@ -26,6 +26,7 @@ jobs:
         with:
           ref: ${{ inputs.default-branch }}
           fetch-depth: 0
+          token: ${{ secrets.repo-token }}
       - id: cz
         uses: commitizen-tools/commitizen-action@master
         with:
