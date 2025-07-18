@@ -23,7 +23,7 @@ on:
         required: true
       pypi-token:
         description: "PyPI API token"
-        required: true
+        required: false
 
 permissions:
   contents: write
@@ -61,5 +61,10 @@ jobs:
             dist/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.repo-token }}
-      - run: uv publish --token ${{ secrets.pypi-token }}
+      - run: |
+          if [ -z "${{ secrets.pypi-token }}" ]; then
+            echo "No PyPI token provided, skipping publish."
+          else
+            uv publish --token ${{ secrets.pypi-token }}
+          fi
         if: ${{ inputs.publish-to-pypi }}
