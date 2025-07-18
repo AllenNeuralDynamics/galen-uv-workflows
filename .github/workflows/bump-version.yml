@@ -22,13 +22,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.default-branch }}
           fetch-depth: 0
           token: ${{ secrets.repo-token }}
-      - id: cz
+      - name: Commitizen bump
+        id: cz
         uses: commitizen-tools/commitizen-action@master
         with:
           github_token: ${{ secrets.repo-token }}
-      - run: echo "Bumped to ${{ steps.cz.outputs.version }}"
+      - name: Show new version
+        run: echo "Bumped to ${{ steps.cz.outputs.version }}"

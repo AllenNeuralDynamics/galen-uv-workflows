@@ -38,23 +38,33 @@ jobs:
     runs-on: ${{ inputs.os }}
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: astral-sh/setup-uv@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
-      - run: uv sync --frozen
-      - run: |
+      - name: Install project
+        run: uv sync --frozen
+      - name: Ruff (lint + format-check)
+        run: |
           uv run --frozen ruff format --check --diff .
           uv run --frozen ruff check --output-format=github .
-      - run: uv run --frozen interrogate -v
-      - run: uv run --frozen codespell --check-filenames
-      - run: uv run --frozen pytest --cov ${{ inputs.package-name }}
-      - run: uv build
-      - run: |
+      - name: Interrogate (docstring coverage)
+        run: uv run --frozen interrogate -v
+      - name: Codespell (typo checker)
+        run: uv run --frozen codespell --check-filenames
+      - name: Pytest (unit test)
+        run: uv run --frozen pytest --cov ${{ inputs.package-name }}
+      - name: Build
+        run: uv build
+      - name: Smoke-test built wheel
+        run: |
           TEMP_DIR=${{ runner.temp }}/wheeltest
           mkdir -p "$TEMP_DIR"
           for path in ${{ inputs.smoke-test-paths }}; do

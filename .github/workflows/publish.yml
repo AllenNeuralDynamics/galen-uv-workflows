@@ -1,4 +1,4 @@
-name: Release
+name: Publish
 
 on:
   workflow_call:
@@ -35,23 +35,30 @@ jobs:
     # selected a tag ref (i.e. github.ref starts with refs/tags/)
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           # on push this is already the tag ref; on dispatch you must choose
           # the tag in the UI so github.ref is the tag
           ref: ${{ github.ref }}
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: astral-sh/setup-uv@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
-      - run: uv sync --frozen
-      - run: uv build
-      - run: ls -la dist/
-      - uses: softprops/action-gh-release@v2
+      - name: Install project
+        run: uv sync --frozen
+      - name: Build
+        run: uv build
+      - name: Verify artifacts
+        run: ls -la dist/
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag-name }}
           name: Release ${{ inputs.tag-name }}
@@ -61,7 +68,8 @@ jobs:
             dist/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.repo-token }}
-      - run: |
+      - name: Publish to PyPI
+        run: |
           if [ -z "${{ secrets.pypi-token }}" ]; then
             echo "No PyPI token provided, skipping publish."
           else
