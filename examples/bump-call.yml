@@ -1,0 +1,45 @@
+# Example workflow to use the reusable bump-version workflow
+# This workflow is triggered by the completion of a CI workflow and bumps the
+# version if the last commit message does not start with 'bump:'.  It can also
+# be manually triggered via workflow_dispatch.
+#
+# * The bumped version is pushed to the repository.
+# * The workflow uses a service token for authentication.
+# * The concurrency group ensures that only one bump job runs at a time for the
+# same branch.
+# * The workflow runs on the main branch.
+# * This calling workflow should be placed in `.github/workflows/bump-call.yml`
+# of your repository.
+name: Bump Version
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [ main ]
+    types: [ completed ]
+  workflow_dispatch:
+
+permissions:
+  contents: write    # needed to push commits/tags
+  id-token: write    # needed if your reusable workflow exchanges OIDC tokens
+
+concurrency:
+  group: bump-${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bump:
+    # Only run when:
+    #  • a CI run just succeeded (and the head commit message doesn't start with 'bump:')
+    #  • OR this is a manual dispatch
+    if: >
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       !startsWith(github.event.workflow_run.head_commit.message, 'bump:')) ||
+      (github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main')
+    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/bump-version.yml@v1
+    with:
+      default-branch: main
+    secrets:
+      repo-token: ${{ secrets.SERVICE_TOKEN }}

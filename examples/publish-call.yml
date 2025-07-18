@@ -1,0 +1,33 @@
+# Example workflow to use the reusable publish workflow
+# This workflow is triggered by a push to a tag that matches the pattern 'v[0-9]*'
+# (indicating a semantic versioning tag) or manually via workflow_dispatch.
+# It creates a release and uploads the package to PyPI.
+# * The concurrency group ensures that only one release job runs at a time.
+# * This calling workflow should be placed in `.github/workflows/publish-call.yml`
+# of your repository.
+# * The workflow uses a service token for authentication to PyPI.
+name: "Release"
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'          # semver tags
+  workflow_dispatch:
+
+permissions:
+  contents: write    # create release + upload assets
+
+concurrency:
+  group: release
+  cancel-in-progress: false   # let releases finish
+
+jobs:
+  run-release:
+    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/publish.yml@v1
+    with:
+      tag-name: ${{ github.ref_name }}
+      python-version: "3.13"
+      publish-to-pypi: true # Set to true to publish to PyPI, remove or false to skip
+    secrets:
+      repo-token: ${{ secrets.GITHUB_TOKEN }}
+      pypi-token: ${{ secrets.AIND_PYPI_TOKEN }}

@@ -1,0 +1,51 @@
+
+# Example workflow to use the reusable ci workflow
+# This workflow is triggered by a push to the main branch, a pull request
+# targeting the main branch, or manually via workflow_dispatch. It runs the CI
+# tests for the specified Python versions and OS.
+#
+# * The concurrency group ensures that only one CI job runs at a time for the
+# same branch or pull request.
+# * This calling workflow should be placed in `.github/workflows/ci-call.yml`
+# of your repository.
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-ci:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.9, 3.13]
+
+    # Only run when:
+    #  • this is not a draft pull request
+    #  • the actor is not the GitHub Actions bot
+    #  • the commit message does not start with 'bump:'
+    if: >
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
+      github.actor != 'github-actions[bot]' &&
+      !(github.event_name == 'push' && startsWith(github.event.head_commit.message, 'bump:'))
+
+    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/ci.yml@main
+    with:
+      os: ${{ matrix.os }}
+      python-version: ${{ matrix.python-version }}
+      package-name: your_python_package_name # Replace with your package name
+    secrets:
+      repo-token: ${{ secrets.GITHUB_TOKEN }}

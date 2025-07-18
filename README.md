@@ -7,14 +7,32 @@ aind-github-actions
 
 GitHub actions workflows are found in .github/workflows.
 
+Example calling workflows are in `examples/`
+
+The CI workflow depends on your project having a `dev` group of optional
+dependencies with `ruff`, `interrogate`, `codespell`, `pytest`, and
+`pytest-cov`.
+
+The bump workflow requires `commitizen` configuration in the calling project's
+`pyproject.toml`, and that projects follow
+[conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+The publish workflow can be configured to publish to pypi, as well as make a
+github release. See the example `examples/publish-call.yml` for more
+information.
+
 ### Pull requests
 
-For internal members, please create a branch. For external members, please fork the repository and open a pull request from the fork. We'll primarily use [Angular](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit) style for commit messages. Roughly, they should follow the pattern:
+For internal members, please create a branch. For external members, please fork
+the repository and open a pull request from the fork. We'll primarily use
+[Angular](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
+style for commit messages. Roughly, they should follow the pattern:
 ```text
 <type>(<scope>): <short summary>
 ```
 
-where scope (optional) describes the packages affected by the code changes and type (mandatory) is one of:
+where scope (optional) describes the packages affected by the code changes and
+type (mandatory) is one of:
 
 - **build**: Changes that affect build tools or external dependencies (example scopes: pyproject.toml, setup.py)
 - **ci**: Changes to our CI configuration files and scripts (examples: .github/workflows/ci.yml)
