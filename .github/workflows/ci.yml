@@ -15,6 +15,13 @@ on:
         description: "The Python package name to test/cover"
         required: true
         type: string
+      smoke-test-paths:
+        description: |
+          Space‑separated list of files or directories
+          to copy into the wheel smoke test.
+        required: false
+        type: string
+        default: "tests"
     secrets:
       repo-token:
         description: GitHub token for checkout/PR operations
@@ -49,8 +56,13 @@ jobs:
       - run: uv build
       - run: |
           TEMP_DIR=${{ runner.temp }}/wheeltest
-          mkdir "$TEMP_DIR" && \
-          cp -r tests test-data dist/*.whl "$TEMP_DIR" && \
-          cd "$TEMP_DIR" && \
-          uv venv && source .venv/bin/activate && \
-          uv pip install pytest *.whl && pytest -q
+          mkdir -p "$TEMP_DIR"
+          for path in ${{ inputs.smoke-test-paths }}; do
+            cp -r "$path" "$TEMP_DIR/" || echo "Warning: '$path' not found"
+          done
+          cp dist/*.whl "$TEMP_DIR"
+          cd "$TEMP_DIR"
+          uv venv
+          source .venv/bin/activate
+          uv pip install pytest *.whl
+          pytest -q
