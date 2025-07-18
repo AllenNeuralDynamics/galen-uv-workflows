@@ -50,7 +50,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
       - name: Install project
-        run: uv sync
+        run: uv sync --frozen
       - name: Ruff (lint + format-check)
         run: |
           uv run --frozen ruff format --check --diff .
