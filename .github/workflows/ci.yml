@@ -46,7 +46,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
-      - run: uv sync --frozen --extra dev
+      - run: uv sync --frozen
       - run: |
           uv run --frozen ruff format --check --diff .
           uv run --frozen ruff check --output-format=github .
