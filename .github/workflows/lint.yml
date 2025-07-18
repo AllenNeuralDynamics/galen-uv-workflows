@@ -1,0 +1,63 @@
+# Call this workflow with:
+# jobs:
+#   lint:
+#     uses: AllenNeuralDynamics/aind-github-actions/.github/workflows/lint.yml@main
+#     with:
+#       path_include: 'src' # optional, default: '**'
+#       path_exclude: 'src/.github' # optional, default: ''
+#     secrets:
+#       SERVICE_TOKEN: ${{ secrets.SERVICE_TOKEN }} # required
+#     env: # optional
+#       # these will override the defaults in the workflow
+#       # see https://github.com/github/super-linter#environment-variables
+#       # non-default config files
+#       PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+#       PYTHON_ISORT_CONFIG_FILE: pyproject.toml
+#       ... # other non-default config files
+#       # disable linters
+#       VALIDATE_PYTHON_PYLINT: false
+#       ... # other linters to disable
+
+on:
+  workflow_call:
+    inputs:
+      path_include:
+        description: 'The path to lint'
+        required: false
+        type: string
+        default: '**'
+      path_exclude:
+        description: 'The path to exclude from linting'
+        required: false
+        type: string
+    secrets:
+      SERVICE_TOKEN:
+        required: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.SERVICE_TOKEN }}
+    - name: Lint Commit Message
+      uses: wagoid/commitlint-github-action@v5
+    - name: Lint Code Base
+      uses: github/super-linter/slim@v4
+      # Slim image does not include linters: rust, dotenv, armtk, pwsh, c#
+      env:
+        GITHUB_TOKEN: ${{ secrets.SERVICE_TOKEN }}
+        VALIDATE_ALL_CODEBASE: false
+        DEFAULT_BRANCH: main
+        FILTER_REGEX_EXCLUDE: ${{ inputs.path_exclude }}
+        FILTER_REGEX_INCLUDE: ${{ inputs.path_include }}
+        LINTER_RULES_PATH: /
+        # non-default config files
+        PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+        PYTHON_ISORT_CONFIG_FILE: pyproject.toml
+        # disable linters
+        VALIDATE_PYTHON_PYLINT: false
