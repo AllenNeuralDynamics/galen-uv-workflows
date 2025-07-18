@@ -45,6 +45,6 @@ jobs:
     with:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}
-      package-name: your_package_name # Replace with the importable package name of your Python package
+      package-name: <your_package_name> # Replace with the importable package name of your Python package
     secrets:
       repo-token: ${{ secrets.GITHUB_TOKEN }}

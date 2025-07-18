@@ -17,7 +17,7 @@ on:
         type: string
       smoke-test-paths:
         description: |
-          Space‑separated list of files or directories
+          space-separated list of files or directories
           to copy into the wheel smoke test.
         required: false
         type: string
