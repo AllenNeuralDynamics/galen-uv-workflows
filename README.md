@@ -9,7 +9,7 @@ GitHub actions workflows are found in .github/workflows.
 
 Example calling workflows are in `examples/`
 
-The CI workflow depends on your project having a `dev` group of optional
+The UV CI workflow depends on your project having a `dev` group of optional
 dependencies with `ruff`, `interrogate`, `codespell`, `pytest`, and
 `pytest-cov`.
 
@@ -25,8 +25,7 @@ information.
 
 For internal members, please create a branch. For external members, please fork
 the repository and open a pull request from the fork. We'll primarily use
-[Angular](https://github.com/angular/angular/blob/main/CONTRIBUTING.md#commit)
-style for commit messages. Roughly, they should follow the pattern:
+[conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
 ```text
 <type>(<scope>): <short summary>
 ```

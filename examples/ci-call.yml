@@ -41,7 +41,7 @@ jobs:
       github.actor != 'github-actions[bot]' &&
       !(github.event_name == 'push' && startsWith(github.event.head_commit.message, 'bump:'))
 
-    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/ci.yml@main
+    uses: AllenNeuralDynamics/aind-github-actions/.github/workflows/ci-uv.yml@main
     with:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}

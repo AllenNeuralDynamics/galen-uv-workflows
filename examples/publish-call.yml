@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   run-release:
-    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/publish.yml@v1
+    uses: AllenNeuralDynamics/aind-github-actions.github/workflows/publish.yml@main
     with:
       tag-name: ${{ github.ref_name }}
       python-version: "3.13"
