@@ -22,6 +22,11 @@ on:
         required: false
         type: string
         default: "tests"
+      run-mypy:
+        description: "Whether to run mypy for typing checks (true/false)"
+        required: false
+        type: boolean
+        default: false
     secrets:
       repo-token:
         description: GitHub token for checkout/PR operations
@@ -76,3 +81,6 @@ jobs:
           source .venv/bin/activate
           uv pip install pytest *.whl
           pytest -q
+      - name: Mypy (typing check)
+        if: ${{ inputs.run-mypy }}
+        run: uv run --frozen mypy ${{ inputs.package-name }}
