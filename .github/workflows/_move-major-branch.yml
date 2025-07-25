@@ -28,30 +28,37 @@ jobs:
   move-major-branch:
     runs-on: ubuntu-latest
     steps:
-      # 1) Work out which tag & commit we’re supposed to handle
+      # 1) Check out repo so we can move branches
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.UV_WORKFLOW }}
+
+      # 2) Work out which tag & commit we’re supposed to handle
       - name: Determine tag & commit
         id: vars
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            TAG="${{ github.inputs.tag }}"
-            git fetch --tags origin "${TAG}"
-            COMMIT=$(git rev-list -n1 "${TAG}")
+            TAG="${{ inputs.tag }}"
+            # Make sure the tag exists locally
+            if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+              echo "::error::Tag '${TAG}' not found in origin; did you push it?"
+              exit 1
+            fi
+            COMMIT=$(git rev-parse "refs/tags/${TAG}^{commit}")
           else
             TAG="${GITHUB_REF#refs/tags/}"
             COMMIT="${GITHUB_SHA}"
           fi
           MAJOR="${TAG%%.*}"                      # strip after first dot
-          echo "tag=${TAG}"     >>"$GITHUB_OUTPUT"
+          echo "tag=${TAG}"       >>"$GITHUB_OUTPUT"
           echo "commit=${COMMIT}" >>"$GITHUB_OUTPUT"
-          echo "major=${MAJOR}" >>"$GITHUB_OUTPUT"
+          echo "major=${MAJOR}"   >>"$GITHUB_OUTPUT"
 
-      # 2) Check out repo so we can move branches
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       # 3) Fast‑forward or create the major branch
-      - name: Move or create ${TAG%%.*} branch
+      - name: Move or create major branch
         env:
           MAJOR:  ${{ steps.vars.outputs.major }}
           COMMIT: ${{ steps.vars.outputs.commit }}
@@ -68,4 +75,4 @@ jobs:
             echo "Creating new branch $MAJOR at $COMMIT"
             git branch "$MAJOR" "$COMMIT"
           fi
-          git push origin "$MAJOR" --force-with-lease
+          git push origin "$COMMIT:refs/heads/$MAJOR" --force-with-lease
