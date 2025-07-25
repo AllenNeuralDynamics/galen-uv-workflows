@@ -1,0 +1,45 @@
+# This is NOT a reusable workflow, and is not part of the public API.
+#
+# This workflow is triggered by a push to the main branch or manually via
+# workflow_dispatch. It runs the bump version job to update the package
+# version in the repository. The job will only run if the last commit message
+# does not start with 'bump:'. This is to prevent accidental bumps when the
+# commit message is not intended to trigger a version bump.
+#
+# * The bumped version is pushed to the repository.
+# * The workflow uses a service token for authentication.
+# * The concurrency group ensures that only one bump job runs at a time for the
+#   same branch.
+# * The workflow runs on the main branch.
+name: Bump Version
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write    # needed to push commits/tags
+  id-token: write    # needed if your reusable workflow exchanges OIDC tokens
+
+concurrency:
+  group: bump-${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  bump:
+    # Only run when:
+    #  • There was a push to main and the head commit message doesn't start
+    #    with 'bump:'
+    #  • OR this is a manual dispatch
+    if: >
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main' &&
+       !startsWith(github.event.head_commit.message, 'bump:')) ||
+      (github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main')
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      default-branch: main
+    secrets:
+      repo-token: ${{ secrets.SERVICE_TOKEN }}

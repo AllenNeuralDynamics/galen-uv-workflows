@@ -1,0 +1,71 @@
+# This is NOT a reusable workflow, and is not part of the public API.
+#
+# This workflow is triggered by a push to a version tag (e.g. v1.2.3) or
+# manually via workflow_dispatch. It moves the commit pointed to by the tag to
+# a major branch (e.g. v1, v2, etc.). If the major branch already exists, it
+# will reset it to the commit of the tag. If it does not exist, it will create
+# the branch at the commit of the tag.
+name: "Move/update major branch"
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to process (e.g. v3.2.1)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: move-major-branch
+  cancel-in-progress: false
+
+jobs:
+  move-major-branch:
+    runs-on: ubuntu-latest
+    steps:
+      # 1) Work out which tag & commit we’re supposed to handle
+      - name: Determine tag & commit
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ github.inputs.tag }}"
+            git fetch --tags origin "${TAG}"
+            COMMIT=$(git rev-list -n1 "${TAG}")
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            COMMIT="${GITHUB_SHA}"
+          fi
+          MAJOR="${TAG%%.*}"                      # strip after first dot
+          echo "tag=${TAG}"     >>"$GITHUB_OUTPUT"
+          echo "commit=${COMMIT}" >>"$GITHUB_OUTPUT"
+          echo "major=${MAJOR}" >>"$GITHUB_OUTPUT"
+
+      # 2) Check out repo so we can move branches
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 3) Fast‑forward or create the major branch
+      - name: Move or create ${TAG%%.*} branch
+        env:
+          MAJOR:  ${{ steps.vars.outputs.major }}
+          COMMIT: ${{ steps.vars.outputs.commit }}
+        run: |
+          set -euo pipefail
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin "$MAJOR" >/dev/null; then
+            echo "Resetting branch $MAJOR to $COMMIT"
+            git branch -f "$MAJOR" "$COMMIT"
+          else
+            echo "Creating new branch $MAJOR at $COMMIT"
+            git branch "$MAJOR" "$COMMIT"
+          fi
+          git push origin "$MAJOR" --force-with-lease
