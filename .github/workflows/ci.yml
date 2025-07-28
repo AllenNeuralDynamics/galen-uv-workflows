@@ -62,7 +62,7 @@ jobs:
           uv run --frozen ruff check --output-format=github .
       - name: Mypy (typing check)
         if: ${{ inputs.run-mypy }}
-        run: uv run --frozen mypy ${{ inputs.package-name }}
+        run: uv run --frozen mypy
       - name: Interrogate (docstring coverage)
         run: uv run --frozen interrogate -v
       - name: Codespell (typo checker)
