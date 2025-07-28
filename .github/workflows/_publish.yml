@@ -9,7 +9,7 @@ name: "Release"
 on:
   push:
     tags:
-      - 'v[0-9]*'          # semver tags
+      - 'v[0-9]+\\.[0-9]+\\.[0-9]+'          # semver tags
   workflow_dispatch:
 
 permissions:
