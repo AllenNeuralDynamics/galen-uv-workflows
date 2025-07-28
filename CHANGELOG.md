@@ -1,3 +1,9 @@
+## v2.2.4 (2025-07-28)
+
+### Fix
+
+- remove package name from mypy test
+
 ## v2.2.3 (2025-07-28)
 
 ### Fix
