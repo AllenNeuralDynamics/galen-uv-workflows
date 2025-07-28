@@ -1,3 +1,9 @@
+## v2.2.2 (2025-07-28)
+
+### Fix
+
+- Fix escaping in yml file
+
 ## v2.2.1 (2025-07-28)
 
 ### Fix
