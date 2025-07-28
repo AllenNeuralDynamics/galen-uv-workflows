@@ -60,6 +60,9 @@ jobs:
         run: |
           uv run --frozen ruff format --check --diff .
           uv run --frozen ruff check --output-format=github .
+      - name: Mypy (typing check)
+        if: ${{ inputs.run-mypy }}
+        run: uv run --frozen mypy ${{ inputs.package-name }}
       - name: Interrogate (docstring coverage)
         run: uv run --frozen interrogate -v
       - name: Codespell (typo checker)
@@ -81,6 +84,3 @@ jobs:
           source .venv/bin/activate
           uv pip install pytest *.whl
           pytest -q
-      - name: Mypy (typing check)
-        if: ${{ inputs.run-mypy }}
-        run: uv run --frozen mypy ${{ inputs.package-name }}
