@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false   # let releases finish
 
 jobs:
-  build-release-publish:
+  Release:
     runs-on: ubuntu-latest
     # only run on a tag push, or on a manual dispatch *where* the user has
     # selected a tag ref (i.e. github.ref starts with refs/tags/)
