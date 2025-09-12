@@ -1,0 +1,100 @@
+name: _docs-ci (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Python version to use
+        type: string
+        default: '3.12'
+      use-uv:
+        description: Use uv instead of pip
+        type: boolean
+        default: true
+      install-extras:
+        description: Extra selector to install docs deps (e.g., .[docs])
+        type: string
+        default: '.[docs]'
+      docs-path:
+        description: Path to Sphinx docs dir
+        type: string
+        default: 'docs'
+      output-dir:
+        description: Where to write built HTML
+        type: string
+        default: 'docs/_build/html'
+      fail-on-warnings:
+        description: Treat Sphinx warnings as errors (-W)
+        type: boolean
+        default: true
+      linkcheck:
+        description: Run sphinx linkcheck (non-blocking)
+        type: boolean
+        default: false
+      run-apidoc:
+        description: Run sphinx-apidoc before build
+        type: boolean
+        default: false
+      apidoc-args:
+        description: Args passed to sphinx-apidoc
+        type: string
+        default: '-o docs/api src'
+      artifact-name:
+        description: Name for uploaded site artifact
+        type: string
+        default: 'site'
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python + uv
+        if: inputs.use-uv == true
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Setup Python (pip)
+        if: inputs.use-uv != true
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+
+      - name: Install project + docs deps (uv)
+        if: inputs.use-uv == true
+        run: uv pip install -e '${{ inputs.install-extras }}'
+
+      - name: Install project + docs deps (pip)
+        if: inputs.use-uv != true
+        run: |
+          python -m pip install -U pip
+          pip install -e '${{ inputs.install-extras }}'
+
+      - name: Generate API stubs (optional)
+        if: inputs.run-apidoc == true
+        run: sphinx-apidoc ${{ inputs.apidoc-args }}
+
+      - name: Ensure autosummary dirs exist (nice logs)
+        run: |
+          mkdir -p "${{ inputs.docs-path }}/generated" "${{ inputs.docs-path }}/_autosummary" || true
+
+      - name: Build HTML
+        run: |
+          FLAGS=""
+          if [ "${{ inputs.fail-on-warnings }}" = "true" ]; then FLAGS="-W"; fi
+          sphinx-build $FLAGS -b html "${{ inputs.docs-path }}" "${{ inputs.output-dir }}"
+
+      - name: Linkcheck (non-blocking)
+        if: inputs.linkcheck == true
+        run: sphinx-build -b linkcheck "${{ inputs.docs-path }}" "${{ inputs.docs-path }}/_build/linkcheck" || true
+
+      - name: Upload built site as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.output-dir }}
