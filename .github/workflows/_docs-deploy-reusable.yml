@@ -6,9 +6,6 @@ on:
       python-version:
         type: string
         default: '3.12'
-      use-uv:
-        type: boolean
-        default: true
       install-extras:
         type: string
         default: '.[docs]'
@@ -38,34 +35,21 @@ jobs:
         run: git fetch --force --tags --prune
 
       - name: Setup Python + uv
-        if: inputs.use-uv == true
         uses: astral-sh/setup-uv@v4
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Setup Python (pip)
-        if: inputs.use-uv != true
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ inputs.python-version }}
-          cache: pip
 
       - name: Install project + docs deps (uv)
         if: inputs.use-uv == true
-        run: uv pip install -e '${{ inputs.install-extras }}'
-
-      - name: Install project + docs deps (pip)
-        if: inputs.use-uv != true
-        run: |
-          python -m pip install -U pip
-          pip install -e '${{ inputs.install-extras }}'
+        run: uv sync --frozen ${{ inputs.install-extras }}
 
       - name: Generate API stubs (optional)
         if: inputs.run-apidoc == true
-        run: sphinx-apidoc ${{ inputs.apidoc-args }}
+        run: uv run --frozen sphinx-apidoc ${{ inputs.apidoc-args }}
 
       - name: Build multiversion HTML
-        run: sphinx-multiversion "${{ inputs.docs-path }}" "${{ inputs.output-dir }}"
+        run: uv run --frozen sphinx-multiversion "${{ inputs.docs-path }}" "${{ inputs.output-dir }}"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

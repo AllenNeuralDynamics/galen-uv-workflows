@@ -7,10 +7,6 @@ on:
         description: Python version to use
         type: string
         default: '3.12'
-      use-uv:
-        description: Use uv instead of pip
-        type: boolean
-        default: true
       install-extras:
         description: Extra selector to install docs deps (e.g., .[docs])
         type: string
@@ -53,31 +49,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python + uv
-        if: inputs.use-uv == true
         uses: astral-sh/setup-uv@v4
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Setup Python (pip)
-        if: inputs.use-uv != true
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ inputs.python-version }}
-          cache: pip
-
       - name: Install project + docs deps (uv)
-        if: inputs.use-uv == true
         run: uv sync --frozen ${{ inputs.install-extras }}
-
-      - name: Install project + docs deps (pip)
-        if: inputs.use-uv != true
-        run: |
-          python -m pip install -U pip
-          pip install . --group dev ${{ inputs.install-extras }}
 
       - name: Generate API stubs (optional)
         if: inputs.run-apidoc == true
-        run: sphinx-apidoc ${{ inputs.apidoc-args }}
+        run: uv run --frozen sphinx-apidoc ${{ inputs.apidoc-args }}
 
       - name: Ensure autosummary dirs exist (nice logs)
         run: |
@@ -87,11 +68,11 @@ jobs:
         run: |
           FLAGS=""
           if [ "${{ inputs.fail-on-warnings }}" = "true" ]; then FLAGS="-W"; fi
-          sphinx-build $FLAGS -b html "${{ inputs.docs-path }}" "${{ inputs.output-dir }}"
+          uv run --frozen sphinx-build $FLAGS -b html "${{ inputs.docs-path }}" "${{ inputs.output-dir }}"
 
       - name: Linkcheck (non-blocking)
         if: inputs.linkcheck == true
-        run: sphinx-build -b linkcheck "${{ inputs.docs-path }}" "${{ inputs.docs-path }}/_build/linkcheck" || true
+        run: uv run --frozen sphinx-build -b linkcheck "${{ inputs.docs-path }}" "${{ inputs.docs-path }}/_build/linkcheck" || true
 
       - name: Upload built site as artifact
         uses: actions/upload-artifact@v4
