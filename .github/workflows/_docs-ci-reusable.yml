@@ -75,7 +75,7 @@ jobs:
         run: uv run --frozen sphinx-build -b linkcheck "${{ inputs.docs-path }}" "${{ inputs.docs-path }}/_build/linkcheck" || true
 
       - name: Upload built site as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ inputs.artifact-name }}
           path: ${{ inputs.output-dir }}
