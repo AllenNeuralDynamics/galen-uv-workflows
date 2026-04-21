@@ -1,0 +1,36 @@
+# Example workflow to use the reusable docs-ci workflow
+# This workflow is triggered by pull requests targeting the main branch or
+# manually via workflow_dispatch. It builds the Sphinx documentation and
+# uploads the built site as an artifact.
+#
+# * The concurrency group ensures that only one docs build runs at a time for
+#   the same branch or pull request.
+# * This calling workflow should be placed in `.github/workflows/docs-ci-call.yml`
+#   of your repository.
+name: docs (CI)
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/_docs-ci-reusable.yml@v2
+    with:
+      python-version: '3.12'
+      install-extras: '.[docs]'
+      docs-path: 'docs/source'
+      output-dir: 'docs/build/html'
+      fail-on-warnings: true
+      linkcheck: false              # flip to true if you want it on PRs
+      run-apidoc: false             # set true if you generate pages each build
+      # apidoc-args: '-o docs/api src/your_package -f'

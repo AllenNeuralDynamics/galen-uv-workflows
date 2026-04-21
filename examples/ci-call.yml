@@ -41,10 +41,10 @@ jobs:
       github.actor != 'github-actions[bot]' &&
       !(github.event_name == 'push' && startsWith(github.event.head_commit.message, 'bump:'))
 
-    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/ci.yml@main
+    uses: AllenNeuralDynamics/galen-uv-workflows/.github/workflows/ci.yml@v2
     with:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}
       package-name: <your_package_name> # Replace with the importable package name of your Python package
-    secrets:
-      repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # smoke-test-paths: "tests"     # space-separated paths copied into the wheel smoke test
+      # run-mypy: false               # set true to enable the mypy job

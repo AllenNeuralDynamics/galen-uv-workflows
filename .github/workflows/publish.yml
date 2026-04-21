@@ -52,7 +52,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
       - name: Install project
-        run: uv sync
+        run: uv sync --locked
       - name: Build
         run: uv build
       - name: Verify artifacts

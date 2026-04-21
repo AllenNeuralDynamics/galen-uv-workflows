@@ -48,13 +48,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Python + uv
-        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+
       - name: Install project + docs deps (uv)
-        run: uv sync --frozen ${{ inputs.install-extras }}
+        run: uv sync --locked ${{ inputs.install-extras }}
 
       - name: Generate API stubs (optional)
         if: inputs.run-apidoc == true

@@ -30,7 +30,7 @@ jobs:
           token: ${{ secrets.repo-token }}
       - name: Commitizen bump
         id: cz
-        uses: commitizen-tools/commitizen-action@master
+        uses: commitizen-tools/commitizen-action@0.27.1
         with:
           github_token: ${{ secrets.repo-token }}
       - name: Show new version

@@ -27,60 +27,136 @@ on:
         required: false
         type: boolean
         default: false
-    secrets:
-      repo-token:
-        description: GitHub token for checkout/PR operations
-        required: true
 
 permissions:
   contents: read
   pull-requests: read
 
-
 jobs:
-  tests:
-    name: Python ${{ inputs.python-version }} on ${{ inputs.os }}
+  lint:
+    name: Lint (Py ${{ inputs.python-version }} on ${{ inputs.os }})
     runs-on: ${{ inputs.os }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
       - name: Install project
-        run: uv sync --frozen
-      - name: Ruff (lint + format-check)
-        run: |
-          uv run --frozen ruff format --check --diff .
-          uv run --frozen ruff check --output-format=github .
-      - name: Mypy (typing check)
-        if: ${{ inputs.run-mypy }}
-        run: uv run --frozen mypy
+        run: uv sync --locked
+      - name: Ruff format-check
+        run: uv run --frozen ruff format --check --diff .
+      - name: Ruff check
+        run: uv run --frozen ruff check --output-format=github .
+
+  quality:
+    name: Quality (Py ${{ inputs.python-version }} on ${{ inputs.os }})
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+      - name: Install project
+        run: uv sync --locked
       - name: Interrogate (docstring coverage)
         run: uv run --frozen interrogate -v
       - name: Codespell (typo checker)
         run: uv run --frozen codespell --check-filenames
-      - name: Pytest (unit test)
+
+  type:
+    name: Type (Py ${{ inputs.python-version }} on ${{ inputs.os }})
+    if: ${{ inputs.run-mypy }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+      - name: Install project
+        run: uv sync --locked
+      - name: Mypy
+        run: uv run --frozen mypy
+
+  test:
+    name: Test (Py ${{ inputs.python-version }} on ${{ inputs.os }})
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+      - name: Install project
+        run: uv sync --locked
+      - name: Pytest
         run: uv run --frozen pytest --cov ${{ inputs.package-name }}
-      - name: Build
-        run: uv build
+
+  package:
+    name: Package (Py ${{ inputs.python-version }} on ${{ inputs.os }})
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+      - name: Install project
+        run: uv sync --locked
+      - name: Build wheel
+        run: uv build --wheel
       - name: Smoke-test built wheel
+        shell: bash
         run: |
-          TEMP_DIR=${{ runner.temp }}/wheeltest
+          TEMP_DIR="${{ runner.temp }}/wheeltest"
           mkdir -p "$TEMP_DIR"
           for path in ${{ inputs.smoke-test-paths }}; do
             cp -r "$path" "$TEMP_DIR/" || echo "Warning: '$path' not found"
           done
-          cp dist/*.whl "$TEMP_DIR"
+          cp dist/*.whl "$TEMP_DIR/"
           cd "$TEMP_DIR"
-          uv venv
-          source .venv/bin/activate
-          uv pip install pytest *.whl
-          pytest -q
+
+          uv venv .venv
+
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            PY=".venv/Scripts/python.exe"
+          else
+            PY=".venv/bin/python"
+          fi
+
+          uv pip install --python "$PY" pytest *.whl
+          "$PY" -m pytest -q
+
+  tests:
+    name: Tests (Py ${{ inputs.python-version }} on ${{ inputs.os }})
+    needs: [lint, quality, type, test, package]
+    if: always()
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Verify all required jobs succeeded
+        shell: bash
+        run: |
+          results='${{ toJson(needs) }}'
+          echo "$results"
+          # Fail if any required job failed or was cancelled.
+          # `skipped` is acceptable (e.g. `type` when run-mypy is false).
+          if echo "$results" | grep -qE '"result":[[:space:]]*"(failure|cancelled)"'; then
+            exit 1
+          fi
