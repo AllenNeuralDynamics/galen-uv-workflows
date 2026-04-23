@@ -28,10 +28,38 @@ jobs:
           ref: ${{ inputs.default-branch }}
           fetch-depth: 0
           token: ${{ secrets.repo-token }}
-      - name: Commitizen bump
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Commitizen bump (no push)
         id: cz
         uses: commitizen-tools/commitizen-action@0.27.1
         with:
           github_token: ${{ secrets.repo-token }}
+          push: false
+      # Commitizen updates `pyproject.toml`'s `version` but doesn't regenerate
+      # `uv.lock`, which embeds the root project's version. The stale lockfile
+      # is rejected by `uv sync --locked` downstream (e.g. in a release
+      # workflow), so amend the bump commit to include an up-to-date lockfile
+      # before pushing.
+      - name: Sync uv.lock into the bump commit if present
+        if: ${{ steps.cz.outputs.version != '' && hashFiles('uv.lock') != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv lock
+          if git diff --quiet uv.lock; then
+            echo "uv.lock is already consistent with the bumped pyproject.toml"
+          else
+            echo "uv.lock drifted after bump; amending bump commit to include it"
+            git add uv.lock
+            git commit --amend --no-edit
+            git tag -f "v${{ steps.cz.outputs.version }}"
+          fi
+      - name: Push bump commit and tag
+        if: steps.cz.outputs.version != ''
+        run: |
+          git push origin HEAD:${{ inputs.default-branch }}
+          git push origin "v${{ steps.cz.outputs.version }}"
       - name: Show new version
+        if: steps.cz.outputs.version != ''
         run: echo "Bumped to ${{ steps.cz.outputs.version }}"
