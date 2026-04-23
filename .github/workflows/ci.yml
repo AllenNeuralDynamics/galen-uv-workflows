@@ -27,6 +27,12 @@ on:
         required: false
         type: boolean
         default: false
+    secrets:
+      repo-token:
+        description: |
+          GitHub token. Unused internally but accepted for
+          backwards compatibility with v2.3.x callers.
+        required: false
 
 permissions:
   contents: read
@@ -145,7 +151,11 @@ jobs:
           "$PY" -m pytest -q
 
   tests:
-    name: Tests (Py ${{ inputs.python-version }} on ${{ inputs.os }})
+    # Aggregator job. Name deliberately matches the pre-v2.4 monolith
+    # (`Python X on Y`) so downstream branch-protection required-status-check
+    # entries from v2.3.x keep matching; sub-jobs (Lint/Quality/Type/Test/
+    # Package) provide the finer-grained view in the PR UI.
+    name: Python ${{ inputs.python-version }} on ${{ inputs.os }}
     needs: [lint, quality, type, test, package]
     if: always()
     runs-on: ${{ inputs.os }}
