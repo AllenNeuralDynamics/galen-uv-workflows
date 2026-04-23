@@ -1,3 +1,11 @@
+## v2.4.0 (2026-04-23)
+
+### Feat
+
+- refactor reusable workflows and clean up examples
+
+## v2.3.1 (2026-03-24)
+
 ## v2.3.0 (2025-09-16)
 
 ### Feat
