@@ -1,3 +1,9 @@
+## v2.4.1 (2026-04-23)
+
+### Fix
+
+- restore ci.yml secret + aggregator name for v2.3.x caller compat
+
 ## v2.4.0 (2026-04-23)
 
 ### Feat
