@@ -1,3 +1,9 @@
+## v2.4.2 (2026-04-23)
+
+### Fix
+
+- regenerate uv.lock in the bump commit
+
 ## v2.4.1 (2026-04-23)
 
 ### Fix
