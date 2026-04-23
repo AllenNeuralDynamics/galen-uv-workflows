@@ -1,3 +1,9 @@
+## v2.5.0 (2026-04-23)
+
+### Feat
+
+- wire repo-token into uv sync + add skip-package input
+
 ## v2.4.2 (2026-04-23)
 
 ### Fix
