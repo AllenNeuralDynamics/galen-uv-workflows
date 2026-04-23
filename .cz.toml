@@ -4,3 +4,13 @@ tag_format = "v$version"
 version_scheme = "semver"
 version = "2.3.0"
 update_changelog_on_bump = true
+
+# Extend bump semantics so `chore(deps):` (Dependabot's default prefix for
+# GitHub Actions updates) triggers a PATCH bump. Required for the
+# reusable-workflow model: otherwise action-version updates never produce a
+# tag, `_move-major-branch.yml` never fires, and consumers pinned to `@v2`
+# silently miss every action bump. Breaking dep updates via `chore(deps)!:`
+# still fall through to MAJOR via the `!$` rule.
+bump_pattern = "^((BREAKING[ -]CHANGE|feat|fix|refactor|perf|chore\\(deps\\))(\\(.+\\))?(!)?):"
+bump_map = {"^.+!$" = "MAJOR", "^BREAKING[ -]CHANGE" = "MAJOR", "^feat" = "MINOR", "^fix" = "PATCH", "^refactor" = "PATCH", "^perf" = "PATCH", "^chore\\(deps\\)" = "PATCH"}
+bump_map_major_version_zero = {"^.+!$" = "MAJOR", "^BREAKING[ -]CHANGE" = "MAJOR", "^feat" = "MINOR", "^fix" = "PATCH", "^refactor" = "PATCH", "^perf" = "PATCH", "^chore\\(deps\\)" = "PATCH"}
