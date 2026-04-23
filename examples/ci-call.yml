@@ -48,3 +48,8 @@ jobs:
       package-name: <your_package_name> # Replace with the importable package name of your Python package
       # smoke-test-paths: "tests"     # space-separated paths copied into the wheel smoke test
       # run-mypy: false               # set true to enable the mypy job
+    secrets:
+      # Passed on to `uv sync` as a git `url.insteadOf` credential, so
+      # internal or private git dependencies pinned in [tool.uv.sources]
+      # can be cloned. Omit if all your dependencies are public.
+      repo-token: ${{ secrets.GITHUB_TOKEN }}

@@ -27,11 +27,23 @@ on:
         required: false
         type: boolean
         default: false
+      skip-package:
+        description: |
+          Skip the wheel-build + smoke-test job. Use for projects that
+          are not Python packages (e.g. Code Ocean capsules, where the
+          ``pyproject.toml`` has no ``[build-system]`` and ``uv build``
+          has nothing to build).
+        required: false
+        type: boolean
+        default: false
     secrets:
       repo-token:
         description: |
-          GitHub token. Unused internally but accepted for
-          backwards compatibility with v2.3.x callers.
+          GitHub token used to authenticate ``uv sync`` when the
+          caller's ``pyproject.toml`` pins dependencies via internal
+          or private git URLs. If provided, the token is installed as
+          a ``url.insteadOf`` git credential before ``uv sync`` runs.
+          Omit for callers whose git dependencies are all public.
         required: false
 
 permissions:
@@ -51,6 +63,19 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
+      - name: Configure git for internal deps
+        # If the caller passed a repo-token, install it as a global
+        # git credential so ``uv sync`` can clone internal or private
+        # git dependencies pinned in ``[tool.uv.sources]``. No-op when
+        # the secret is empty (all-public-dep callers).
+        env:
+          GH_TOKEN: ${{ secrets.repo-token }}
+        run: |
+          if [[ -n "${GH_TOKEN}" ]]; then
+            git config --global \
+              url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
+              "https://github.com/"
+          fi
       - name: Install project
         run: uv sync --locked
       - name: Ruff format-check
@@ -70,6 +95,19 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
+      - name: Configure git for internal deps
+        # If the caller passed a repo-token, install it as a global
+        # git credential so ``uv sync`` can clone internal or private
+        # git dependencies pinned in ``[tool.uv.sources]``. No-op when
+        # the secret is empty (all-public-dep callers).
+        env:
+          GH_TOKEN: ${{ secrets.repo-token }}
+        run: |
+          if [[ -n "${GH_TOKEN}" ]]; then
+            git config --global \
+              url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
+              "https://github.com/"
+          fi
       - name: Install project
         run: uv sync --locked
       - name: Interrogate (docstring coverage)
@@ -90,6 +128,19 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
+      - name: Configure git for internal deps
+        # If the caller passed a repo-token, install it as a global
+        # git credential so ``uv sync`` can clone internal or private
+        # git dependencies pinned in ``[tool.uv.sources]``. No-op when
+        # the secret is empty (all-public-dep callers).
+        env:
+          GH_TOKEN: ${{ secrets.repo-token }}
+        run: |
+          if [[ -n "${GH_TOKEN}" ]]; then
+            git config --global \
+              url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
+              "https://github.com/"
+          fi
       - name: Install project
         run: uv sync --locked
       - name: Mypy
@@ -107,6 +158,19 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
+      - name: Configure git for internal deps
+        # If the caller passed a repo-token, install it as a global
+        # git credential so ``uv sync`` can clone internal or private
+        # git dependencies pinned in ``[tool.uv.sources]``. No-op when
+        # the secret is empty (all-public-dep callers).
+        env:
+          GH_TOKEN: ${{ secrets.repo-token }}
+        run: |
+          if [[ -n "${GH_TOKEN}" ]]; then
+            git config --global \
+              url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
+              "https://github.com/"
+          fi
       - name: Install project
         run: uv sync --locked
       - name: Pytest
@@ -114,6 +178,7 @@ jobs:
 
   package:
     name: Package (Py ${{ inputs.python-version }} on ${{ inputs.os }})
+    if: ${{ !inputs.skip-package }}
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v6
@@ -124,6 +189,19 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
+      - name: Configure git for internal deps
+        # If the caller passed a repo-token, install it as a global
+        # git credential so ``uv sync`` can clone internal or private
+        # git dependencies pinned in ``[tool.uv.sources]``. No-op when
+        # the secret is empty (all-public-dep callers).
+        env:
+          GH_TOKEN: ${{ secrets.repo-token }}
+        run: |
+          if [[ -n "${GH_TOKEN}" ]]; then
+            git config --global \
+              url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
+              "https://github.com/"
+          fi
       - name: Install project
         run: uv sync --locked
       - name: Build wheel
