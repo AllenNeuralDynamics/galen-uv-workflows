@@ -30,21 +30,43 @@ jobs:
           token: ${{ secrets.repo-token }}
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
+      # Run commitizen as a regular shell step instead of via the
+      # commitizen-tools/commitizen-action Docker container action. The
+      # container action created files owned by root, requiring chown
+      # workarounds in subsequent shell steps. Running cz directly under uv
+      # keeps everything as the runner user, faster (no image pull), and
+      # makes the actual commands visible in the workflow file.
+      - name: Configure git identity
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Commitizen bump (no push)
         id: cz
-        uses: commitizen-tools/commitizen-action@0.27.1
-        with:
-          github_token: ${{ secrets.repo-token }}
-          push: false
-      # commitizen-action runs as a Docker container action; the container
-      # creates files (.git/ metadata, pyproject.toml, CHANGELOG.md) owned by
-      # root, and later shell steps run as the runner user (uid 1001) and
-      # cannot modify those files. Restore ownership before any subsequent
-      # step that writes to the workspace.
-      - name: Restore workspace ownership after container action
-        if: steps.cz.outputs.version != ''
         shell: bash
-        run: sudo chown -R "$(id -u):$(id -g)" .
+        run: |
+          set -euo pipefail
+          uv tool install commitizen
+          PRE=$(uv tool run cz version --project)
+          LOG=$(mktemp)
+          # cz bump exits non-zero when there are no commits to bump; tolerate
+          # that specific case (the bump-call workflow can fire on commits
+          # that aren't bump-eligible) and propagate any other failure.
+          if ! uv tool run cz bump --yes >"$LOG" 2>&1; then
+            if grep -qE "NoCommitsFound|NothingToBump|NoNewCommitsToBump" "$LOG"; then
+              cat "$LOG"
+              echo "::notice::No bump-eligible commits since last release; skipping."
+            else
+              cat "$LOG"
+              exit 1
+            fi
+          else
+            cat "$LOG"
+          fi
+          POST=$(uv tool run cz version --project)
+          if [[ "$PRE" != "$POST" ]]; then
+            echo "version=$POST" >>"$GITHUB_OUTPUT"
+          fi
       # Commitizen updates `pyproject.toml`'s `version` but doesn't regenerate
       # `uv.lock`, which embeds the root project's version. The stale lockfile
       # is rejected by `uv sync --locked` downstream (e.g. in a release
