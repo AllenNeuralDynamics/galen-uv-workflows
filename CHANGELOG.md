@@ -1,3 +1,9 @@
+## v2.5.1 (2026-04-25)
+
+### Fix
+
+- restore workspace ownership after commitizen-action container
+
 ## v2.5.0 (2026-04-23)
 
 ### Feat

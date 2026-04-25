@@ -2,7 +2,7 @@
 name = "cz_conventional_commits"
 tag_format = "v$version"
 version_scheme = "semver"
-version = "2.5.0"
+version = "2.5.1"
 update_changelog_on_bump = true
 
 # Extend bump semantics so `chore(deps):` (Dependabot's default prefix for
