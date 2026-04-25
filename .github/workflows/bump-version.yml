@@ -36,6 +36,15 @@ jobs:
         with:
           github_token: ${{ secrets.repo-token }}
           push: false
+      # commitizen-action runs as a Docker container action; the container
+      # creates files (.git/ metadata, pyproject.toml, CHANGELOG.md) owned by
+      # root, and later shell steps run as the runner user (uid 1001) and
+      # cannot modify those files. Restore ownership before any subsequent
+      # step that writes to the workspace.
+      - name: Restore workspace ownership after container action
+        if: steps.cz.outputs.version != ''
+        shell: bash
+        run: sudo chown -R "$(id -u):$(id -g)" .
       # Commitizen updates `pyproject.toml`'s `version` but doesn't regenerate
       # `uv.lock`, which embeds the root project's version. The stale lockfile
       # is rejected by `uv sync --locked` downstream (e.g. in a release
