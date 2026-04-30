@@ -15,13 +15,27 @@ on:
         description: "The Python package name to test/cover"
         required: true
         type: string
-      smoke-test-paths:
+      smoke-extras:
         description: |
-          space-separated list of files or directories
-          to copy into the wheel smoke test.
+          Comma-separated extras to install before the wheel smoke test
+          (e.g. ``"all"`` or ``"gpu,viz"``). Default is empty: install the
+          minimal wheel and walk-import every submodule. Use this only when
+          submodules genuinely require an extra to import at module
+          top-level; otherwise prefer lazy-importing the extra inside the
+          consumers that need it, so the minimal install passes the smoke
+          test.
         required: false
         type: string
-        default: "tests"
+        default: ""
+      smoke-test-paths:
+        description: |
+          Deprecated and ignored. The smoke job no longer copies caller
+          paths or runs pytest; it walks every submodule of the installed
+          wheel and tries to import each. Drop this input from your
+          ``ci-call.yml``; it will be removed in the next major bump.
+        required: false
+        type: string
+        default: ""
       run-mypy:
         description: "Whether to run mypy for typing checks (true/false)"
         required: false
@@ -208,25 +222,65 @@ jobs:
         run: uv build --wheel
       - name: Smoke-test built wheel
         shell: bash
+        env:
+          PACKAGE_NAME: ${{ inputs.package-name }}
+          SMOKE_EXTRAS: ${{ inputs.smoke-extras }}
         run: |
           TEMP_DIR="${{ runner.temp }}/wheeltest"
           mkdir -p "$TEMP_DIR"
-          for path in ${{ inputs.smoke-test-paths }}; do
-            cp -r "$path" "$TEMP_DIR/" || echo "Warning: '$path' not found"
-          done
           cp dist/*.whl "$TEMP_DIR/"
           cd "$TEMP_DIR"
 
           uv venv .venv
-
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             PY=".venv/Scripts/python.exe"
           else
             PY=".venv/bin/python"
           fi
 
-          uv pip install --python "$PY" pytest *.whl
-          "$PY" -m pytest -q
+          wheel="$(ls *.whl)"
+          if [[ -n "$SMOKE_EXTRAS" ]]; then
+            uv pip install --python "$PY" "${wheel}[${SMOKE_EXTRAS}]"
+          else
+            uv pip install --python "$PY" "$wheel"
+          fi
+
+          # Walk every submodule of the installed package and try to import
+          # it. Catches packaging bugs that only surface against the wheel:
+          # missing modules in `[tool.hatch.build.targets.wheel].packages`,
+          # missing package-data, and top-level imports of optional extras
+          # that aren't installed (those should be lazy-loaded inside the
+          # function that needs them).
+          "$PY" - <<'PY_SCRIPT'
+          import importlib
+          import os
+          import pkgutil
+          import sys
+
+          pkg_name = os.environ["PACKAGE_NAME"]
+          pkg = importlib.import_module(pkg_name)
+          if not hasattr(pkg, "__path__"):
+              print(f"OK: imported single-module package {pkg_name!r}")
+              sys.exit(0)
+
+          failures = []
+          imported = 1  # the top-level package
+          for _, name, _ in pkgutil.walk_packages(pkg.__path__, prefix=pkg.__name__ + "."):
+              try:
+                  importlib.import_module(name)
+                  imported += 1
+              except Exception as exc:
+                  failures.append((name, type(exc).__name__, str(exc)))
+
+          if failures:
+              total = imported + len(failures)
+              print(f"FAIL: {len(failures)} of {total} modules failed to import:", file=sys.stderr)
+              for name, etype, msg in failures:
+                  print(f"  {name}: {etype}: {msg}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"OK: imported {pkg_name!r} and {imported - 1} submodules")
+          PY_SCRIPT
 
   tests:
     # Aggregator job. Name deliberately matches the pre-v2.4 monolith
