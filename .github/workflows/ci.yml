@@ -69,7 +69,7 @@ jobs:
     name: Lint (Py ${{ inputs.python-version }} on ${{ inputs.os }})
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
@@ -101,7 +101,7 @@ jobs:
     name: Quality (Py ${{ inputs.python-version }} on ${{ inputs.os }})
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
@@ -134,7 +134,7 @@ jobs:
     if: ${{ inputs.run-mypy }}
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
@@ -164,7 +164,7 @@ jobs:
     name: Test (Py ${{ inputs.python-version }} on ${{ inputs.os }})
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
@@ -195,7 +195,7 @@ jobs:
     if: ${{ !inputs.skip-package }}
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
