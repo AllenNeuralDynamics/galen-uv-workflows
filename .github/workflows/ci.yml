@@ -73,7 +73,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
@@ -138,7 +138,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
@@ -168,7 +168,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
@@ -199,7 +199,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.3.2
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
