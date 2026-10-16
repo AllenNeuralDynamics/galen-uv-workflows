@@ -70,7 +70,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ inputs.python-version }}
       - uses: astral-sh/setup-uv@v10.0.1
@@ -102,7 +102,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ inputs.python-version }}
       - uses: astral-sh/setup-uv@v10.0.1
@@ -135,7 +135,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ inputs.python-version }}
       - uses: astral-sh/setup-uv@v10.0.1
@@ -165,7 +165,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ inputs.python-version }}
       - uses: astral-sh/setup-uv@v10.0.1
@@ -196,7 +196,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ inputs.python-version }}
       - uses: astral-sh/setup-uv@v10.0.1
