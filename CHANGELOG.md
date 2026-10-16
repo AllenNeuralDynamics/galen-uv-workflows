@@ -1,3 +1,14 @@
+## v2.6.0 (2026-10-16)
+
+### Feat
+
+- **ci**: switch wheel smoke test from pytest to import walk
+
+### Fix
+
+- **ci**: resolve the commitizen package for version bumps
+- invoke commitizen as a shell step instead of via container action
+
 ## v2.5.1 (2026-04-25)
 
 ### Fix
