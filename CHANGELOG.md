@@ -1,3 +1,13 @@
+## v2.7.0 (2026-10-21)
+
+### Feat
+
+- **ci**: accept a forced increment in the bump workflow
+
+### Fix
+
+- **ci**: skip bumps by exit code when no commits are eligible
+
 ## v2.6.0 (2026-10-16)
 
 ### Feat
