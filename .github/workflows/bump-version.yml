@@ -48,21 +48,9 @@ jobs:
           set -euo pipefail
           # The package is commitizen; its executable is named cz.
           PRE=$(uv tool run --from commitizen cz version --project)
-          LOG=$(mktemp)
-          # cz bump exits non-zero when there are no commits to bump; tolerate
-          # that specific case (the bump-call workflow can fire on commits
-          # that aren't bump-eligible) and propagate any other failure.
-          if ! uv tool run --from commitizen cz bump --yes >"$LOG" 2>&1; then
-            if grep -qE "NoCommitsFound|NothingToBump|NoNewCommitsToBump" "$LOG"; then
-              cat "$LOG"
-              echo "::notice::No bump-eligible commits since last release; skipping."
-            else
-              cat "$LOG"
-              exit 1
-            fi
-          else
-            cat "$LOG"
-          fi
+          # The caller fires on every merge, so no commits (3) or none eligible
+          # (21) is a skip, not a failure.
+          uv tool run --from commitizen cz --no-raise 3,21 bump --yes
           POST=$(uv tool run --from commitizen cz version --project)
           if [[ "$PRE" != "$POST" ]]; then
             echo "version=$POST" >>"$GITHUB_OUTPUT"
