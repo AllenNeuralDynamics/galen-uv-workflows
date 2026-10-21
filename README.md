@@ -16,6 +16,9 @@ dependencies with `ruff`, `interrogate`, `codespell`, `pytest`, and
 The bump workflow requires `commitizen` configuration in the calling project's
 `pyproject.toml`, and that projects follow
 [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
+Only `feat`, `fix` and breaking changes bump the version; to release anything
+else, run the bump workflow by hand with an `increment` of PATCH, MINOR or
+MAJOR.
 
 The publish workflow can be configured to publish to pypi, as well as make a
 github release. See the example `examples/publish-call.yml` for more

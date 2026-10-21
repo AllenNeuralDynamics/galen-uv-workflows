@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: "main"
+      increment:
+        description: "MAJOR, MINOR or PATCH forces that bump; auto or empty infers it from the commits"
+        required: false
+        type: string
+        default: "auto"
     secrets:
       repo-token:
         description: "Token with write permission to push"
@@ -44,13 +49,21 @@ jobs:
       - name: Commitizen bump (no push)
         id: cz
         shell: bash
+        env:
+          INCREMENT: ${{ inputs.increment }}
         run: |
           set -euo pipefail
           # The package is commitizen; its executable is named cz.
           PRE=$(uv tool run --from commitizen cz version --project)
+          ARGS=(--yes)
+          case "$INCREMENT" in
+            ""|auto) ;;
+            MAJOR|MINOR|PATCH) ARGS+=(--increment "$INCREMENT") ;;
+            *) echo "::error::increment must be auto, MAJOR, MINOR or PATCH, got '$INCREMENT'"; exit 1 ;;
+          esac
           # The caller fires on every merge, so no commits (3) or none eligible
           # (21) is a skip, not a failure.
-          uv tool run --from commitizen cz --no-raise 3,21 bump --yes
+          uv tool run --from commitizen cz --no-raise 3,21 bump "${ARGS[@]}"
           POST=$(uv tool run --from commitizen cz version --project)
           if [[ "$PRE" != "$POST" ]]; then
             echo "version=$POST" >>"$GITHUB_OUTPUT"
