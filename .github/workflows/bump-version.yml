@@ -69,10 +69,10 @@ jobs:
             echo "version=$POST" >>"$GITHUB_OUTPUT"
           fi
       # Commitizen updates `pyproject.toml`'s `version` but doesn't regenerate
-      # `uv.lock`, which embeds the root project's version. The stale lockfile
-      # is rejected by `uv sync --locked` downstream (e.g. in a release
-      # workflow), so amend the bump commit to include an up-to-date lockfile
-      # before pushing.
+      # `uv.lock`, which embeds the root project's version. CI skips bump
+      # commits, so the next commit's `uv sync --locked` would be the first to
+      # reject the stale lockfile; amend the bump commit to include an
+      # up-to-date one before pushing.
       - name: Sync uv.lock into the bump commit if present
         if: ${{ steps.cz.outputs.version != '' && hashFiles('uv.lock') != '' }}
         shell: bash
