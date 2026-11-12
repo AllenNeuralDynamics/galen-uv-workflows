@@ -1,3 +1,9 @@
+## v2.7.1 (2026-11-12)
+
+### Fix
+
+- **publish**: build without installing the project
+
 ## v2.7.0 (2026-10-21)
 
 ### Feat
